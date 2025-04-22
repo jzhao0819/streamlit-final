@@ -102,11 +102,13 @@ filtered_data = df[(df["Category"] == category) & (df["Sub_Category"].isin(sub_c
 # (3) Show a line chart of sales for the selected items
 if not filtered_data.empty:
     st.header("Sales Trend")
-    # Pivot data for line chart
-    pivot_data = filtered_data.pivot_table(index="Order_Date", columns="Sub_Category", values="Sales", aggfunc="sum").reset_index()
-    st.line_chart(pivot_data.set_index("Order_Date"))
-else:
-    st.write("Please select Sub_Category to view the chart.")
+    # Convert date and aggregate by month
+    filtered_data["Order_Date"] = pd.to_datetime(filtered_data["Order_Date"])
+    filtered_data.set_index("Order_Date", inplace=True)
+    monthly_sales = filtered_data.groupby([pd.Grouper(freq="M"), "Sub_Category"])["Sales"].sum().unstack().fillna(0)
+
+    # Plot line chart of monthly sales trend
+    st.line_chart(monthly_sales)
 
 # (4) Show three metrics
 if not filtered_data.empty:
